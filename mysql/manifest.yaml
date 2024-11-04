@@ -6,7 +6,7 @@ metadata:
 spec:
   clusterIP: None # for headless service there is no cluster IP.
   selector:
-    purpose: expense
+    project: expense
     component: mysql
     tier: db
   ports:
@@ -14,7 +14,6 @@ spec:
     port: 3306 #service port
     nodePort: 30006
 ---
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -22,7 +21,7 @@ metadata:
   namespace: expense
 spec:
   selector:
-    purpose: expense
+    project: expense
     component: mysql
     tier: db
   ports:
@@ -39,7 +38,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      purpose: expense
+      project: expense
       component: mysql
       tier: db # has to match .spec.template.metadata.labels
   serviceName: "mysql-headless" # this is the headless service
@@ -47,7 +46,7 @@ spec:
   template:
     metadata:
       labels:
-        purpose: expense
+        project: expense
         component: mysql
         tier: db 
     spec:
