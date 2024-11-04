@@ -1,0 +1,83 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mysql-headless
+  namespace: expense
+spec:
+  clusterIP: None # for headless service there is no cluster IP.
+  selector:
+    purpose: expense
+    component: mysql
+    tier: db
+  ports:
+    protocol: TCP
+    port: 3306 #service port
+    nodePort: 30006
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: mysql
+  namespace: expense
+spec:
+  selector:
+    purpose: expense
+    component: mysql
+    tier: db
+  ports:
+    protocol: TCP
+    port: 3306 #service port
+    nodePort: 30006
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  selector:
+    matchLabels:
+      purpose: expense
+      component: mysql
+      tier: db # has to match .spec.template.metadata.labels
+  serviceName: "mysql-headless" # this is the headless service
+  replicas: 2 
+  template:
+    metadata:
+      labels:
+        purpose: expense
+        component: mysql
+        tier: db 
+    spec:
+      containers:
+      - name: mysql
+        image: venki8686/mysql:v1
+        volumeMounts:
+        - name: mysql
+          mountPath: /var/lib/mysql
+  # this is PVC definition dircetly mentioned here
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "expense-ebs"
+      resources:
+        requests:
+          storage: 1Gi
